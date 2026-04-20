@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>测试你的人生电影</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #f5f3f0;
+      color: #3e4a3d;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      touch-action: pan-y;
+    }
+
+    #app {
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      height: 100vh;
+      position: relative;
+      overflow: hidden;
+      background: #f0ece4;
+      box-shadow: 0 0 20px rgba(0,0,0,0.05);
+    }
+
+    .screen {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1);
+      will-change: transform;
+    }
+
+    .screen-hidden {
+      transform: translateX(100%);
+    }
+
+    /* 首页 */
+    #homeScreen {
+      background: #f5f3f0;
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      overflow-y: auto;
+    }
+
+    .home-card {
+      background: rgba(255, 255, 245, 0.85);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-radius: 36px;
+      padding: 28px 22px;
+      box-shadow: 0 15px 30px -8px rgba(60, 50, 40, 0.08);
+      border: 1px solid #e9e0d6;
+    }
+
+    .btn {
+      background: #d9e3d4;
+      border: none;
+      border-radius: 60px;
+      padding: 16px 24px;
+      font-size: 1.1rem;
+      font-weight: 480;
+      color: #3b543a;
+      box-shadow: 0 4px 8px rgba(90, 100, 70, 0.05);
+      transition: all 0.2s ease;
+      cursor: pointer;
+      border: 1px solid #cbd9c2;
+      text-align: center;
+      width: 100%;
+      margin-top: 24px;
+    }
+
+    .btn-primary {
+      background: #b6cdb0;
+      border-color: #a0b99b;
+      color: #233d24;
+      font-weight: 520;
+    }
+
+    /* 答题屏 */
+    #quizScreen {
+      background: #3a4a35;
+    }
+
+    .quiz-viewport {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      position: relative;
+      touch-action: pan-y;
+    }
+
+    .slides-container {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1);
+      will-change: transform;
+    }
+
+    .question-slide {
+      flex: 0 0 100%;
+      height: 100%;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 20px 16px 32px;
+    }
+
+    .slide-bg-img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+    }
+
+    .question-content {
+      position: relative;
+      z-index: 5;
+      width: 100%;
+      background: rgba(255, 250, 240, 0.2);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+      border-radius: 32px;
+      padding: 20px 18px 24px;
+      box-shadow: 0 -2px 20px rgba(0,0,0,0.03);
+      border: 1px solid rgba(220, 210, 190, 0.5);
+      margin-bottom: 10px;
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      font-size: 0.85rem;
+      color: #5b7a54;
+    }
+
+    .question-text {
+      font-size: 1.25rem;
+      font-weight: 520;
+      color: #2d452b;
+      margin-bottom: 22px;
+      line-height: 1.4;
+    }
+
+    .options-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .option-item {
+      background: rgba(255, 253, 245, 0.5);
+      border-radius: 24px;
+      padding: 16px 18px;
+      border: 1.5px solid #e5dcd0;
+      font-size: 1rem;
+      color: #3a4a35;
+      font-weight: 440;
+      transition: all 0.15s;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+      cursor: pointer;
+    }
+
+    .option-item.selected {
+      border-color: #9bb891;
+      background: #f1f7ed;
+      box-shadow: 0 6px 12px rgba(150, 170, 130, 0.1);
+    }
+
+    .nav-indicator {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    .dot {
+      width: 6px; height: 6px; border-radius: 10px; background: #c0cfb6;
+      transition: all 0.2s;
+    }
+    .dot.active {
+      width: 24px;
+      background: #6f9a63;
+    }
+
+    .swipe-hint {
+      text-align: center;
+      font-size: 0.75rem;
+      color: #8aa27f;
+      margin-top: 8px;
+      opacity: 0.8;
+    }
+
+    /* 结果页 */
+    #resultScreen {
+      background: #f2efe8;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .result-top-bar {
+      position: sticky;
+      top: 0;
+      background: rgba(245, 240, 235, 0.8);
+      backdrop-filter: blur(10px);
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+      border-bottom: 1px solid #dad1c4;
+    }
+
+    .restart-link {
+      color: #4f6a4b;
+      font-weight: 500;
+      padding: 6px 16px;
+      background: #e2ecdb;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .result-long-img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* 结果文本卡片（图片就位后自动隐藏） */
+    .result-text-card {
+      padding: 20px 16px 48px;
+    }
+    .proto-hero {
+      background: linear-gradient(140deg, #e9f1e3 0%, #dce8d5 100%);
+      border-radius: 28px;
+      padding: 26px 20px 22px;
+      margin-bottom: 16px;
+      border: 1px solid #cddec6;
+    }
+    .proto-title {
+      font-size: 1.45rem;
+      font-weight: 620;
+      color: #233d24;
+      margin-bottom: 4px;
+      line-height: 1.3;
+    }
+    .proto-tag {
+      display: inline-block;
+      font-size: 0.8rem;
+      color: #5a7a52;
+      background: rgba(255,255,255,0.5);
+      border: 1px solid #c0d9b6;
+      border-radius: 20px;
+      padding: 2px 10px;
+      margin-bottom: 14px;
+    }
+    .proto-profile {
+      font-size: 0.95rem;
+      color: #3a4e38;
+      line-height: 1.75;
+    }
+    .proto-section-label {
+      font-size: 0.78rem;
+      color: #8aaa7e;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    .proto-movie-card {
+      background: rgba(255, 252, 245, 0.92);
+      border-radius: 22px;
+      padding: 18px 18px 16px;
+      margin-bottom: 12px;
+      border: 1px solid #e2dbd0;
+    }
+    .proto-movie-title {
+      font-size: 1.1rem;
+      font-weight: 620;
+      color: #3b5538;
+      margin-bottom: 6px;
+    }
+    .proto-movie-desc {
+      font-size: 0.9rem;
+      color: #5a6e53;
+      line-height: 1.65;
+    }
+    .proto-picks-wrap {
+      background: rgba(255, 252, 245, 0.7);
+      border-radius: 22px;
+      padding: 16px 16px 8px;
+      border: 1px solid #e4ddd2;
+    }
+    .proto-pick-item {
+      padding-bottom: 12px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid #ede7de;
+    }
+    .proto-pick-item:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+    .proto-pick-title {
+      font-size: 0.95rem;
+      font-weight: 580;
+      color: #3b5538;
+      margin-bottom: 3px;
+    }
+    .proto-pick-desc {
+      font-size: 0.87rem;
+      color: #5a6e53;
+      line-height: 1.55;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <!-- 首页 -->
+  <div id="homeScreen" class="screen">
+    <div class="home-card">
+      <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 20px;">
+        <span style="font-size: 2.2rem;">🎬</span>
+        <h2 style="font-weight: 420; color: #476344;">测试你的人生电影</h2>
+      </div>
+      <p style="color: #5a6e53; margin-bottom: 24px; font-size: 1rem; background: #edf2e7; padding: 18px 16px; border-radius: 28px; text-align: center;">
+        🌱 24道情景题，凭着直觉作出选择。<br>
+        左右滑动切换，点击即选。
+      </p>
+      <button class="btn btn-primary" id="startBtn">✨ 开始测试</button>
+    </div>
+  </div>
+
+  <!-- 答题屏 -->
+  <div id="quizScreen" class="screen hidden">
+    <div class="quiz-viewport" id="quizViewport">
+      <div class="slides-container" id="slidesContainer"></div>
+    </div>
+  </div>
+
+  <!-- 结果屏 -->
+  <div id="resultScreen" class="screen hidden">
+    <div class="result-top-bar">
+      <span style="font-weight: 500; color: #3e5a3a;">✨ 你的人生电影</span>
+      <span class="restart-link" id="restartFromResult">↻ 重测</span>
+    </div>
+    <img id="resultLongImg" class="result-long-img" src="" alt="原型长图" />
+    <div id="resultTextCard" class="result-text-card hidden"></div>
+  </div>
+</div>
+
+<script>
+  (function(){
+    "use strict";
+
+    // --------------------------------------------------------------
+    // 1. 题库数据（完全匹配Python版功能映射，文本采用优化后的生活化描述）
+    // 每道题选项顺序 A/B/C/D 对应 Python questions 中同索引的功能对
+    // 功能字符串格式如 "Ni+Te" 表示两个功能，单功能也会统一处理为数组
+    // 双倍计分题: 第21题(索引20)、第24题(索引23)
+    // 反向校验题: 第17题(索引16)、第23题(索引22)
+    // 中心判定题: 第11题(索引10)、第21题(索引20)、第22题(索引21)、第24题(索引23)
+    // --------------------------------------------------------------
+    const questionsData = [
+  // 第1题：雨天无事的清晨醒来
+  { text:"雨天无事的清晨醒来，你最本能的状态是？", options:[
+    {text:"在脑海中预演今日日程，同时感受房间的静谧与安全感", func:"Ni+Te"},
+    {text:"被雨声和光影吸引，想伸手触摸窗户或赤脚感受地板", func:"Se+Fi"},        // 原 Fe+Se → Se+Fi
+    {text:"拆解雨滴的物理轨迹，好奇这场雨的形成机制", func:"Ti+Ne"},
+    {text:"沉浸于内心情绪，品味这份独处带来的私密感动", func:"Fi+Si"}
+  ]},
+  
+  // 第2题：翻到尘封旧物箱
+  { text:"翻到尘封旧物箱，你最先触碰的是？", options:[
+    {text:"一件陌生旧物，瞬间确信它背后藏着一段被遗忘的故事", func:"Ni+Fe"},
+    {text:"破损的物件，看看还能不能用，直接动手整理或修复", func:"Te+Se"},        // 原 Te+Se 文本改为实干型
+    {text:"老照片，仔细端详人物的神态，推测他们当时的关系与心境", func:"Ti+Ne"}, // 原 Ti+Fi → Ti+Ne
+    {text:"一本笔记，对比字迹与内容，感慨岁月在自己身上留下的痕迹", func:"Si+Fi"} // 原 Ne+Si → Si+Fi
+  ]},
+  
+  // 第3题：黄昏抵达陌生城市
+  { text:"黄昏抵达陌生城市，无目的行走，你最先关注？", options:[
+    {text:"整体布局与未来规划，判断这座城市的潜力与方向", func:"Ni+Se"},
+    {text:"街道的秩序与标识，快速评估交通效率和便利程度", func:"Te+Si"},          // 原 Te+Fe → Te+Si
+    {text:"建筑材质与细节，用手触摸、用眼捕捉真实质感", func:"Ti+Si"},
+    {text:"偶遇的路人神情，猜测他们背后的故事与情绪", func:"Ne+Fi"}
+  ]},
+  
+  // 第4题：朋友回忆往事与你截然不同
+  { text:"朋友回忆往事与你截然不同，你会？", options:[
+    {text:"尝试理解两种记忆为何不同，寻找背后的心理模式", func:"Ni+Ti"},        // 原 Ni+Si → Ni+Ti
+    {text:"明确说出你记得的事实，坚持自己的版本不容混淆", func:"Te+Fi"},        // 文本微调强化 Te+Fi
+    {text:"虽然记得不同，但觉得气氛更重要，一笑而过", func:"Fe+Si"},            // 原 Ti+Fe → Fe+Si
+    {text:"沉浸在自己的记忆画面里，享受那份独有的怀旧情绪", func:"Fi+Si"}       // 原 Ne+Se → Fi+Si
+  ]},
+  
+  // 第5题：凌晨惊醒无法入睡
+  { text:"凌晨惊醒无法入睡，你最容易陷入？", options:[
+    {text:"梳理白天的逻辑漏洞，分析是什么环节导致了失眠", func:"Ti+Ne"},
+    {text:"感受被窝的温暖与窗外微弱的光影，慢慢放松", func:"Fe+Si"},
+    {text:"任由思绪飘向未来可能发生的场景，半梦半醒", func:"Ni+Se"},
+    {text:"明确规划接下来几小时的行动，让自己安心", func:"Te+Fi"}
+  ]},
+  
+  // 第6题：新家墙面空置
+  { text:"新家墙面空置，你会如何布置？", options:[
+    {text:"根据房间功能分区，先规划好每面墙的主题与色调", func:"Ti+Fe"},
+    {text:"挂上亲友的照片或纪念品，让墙面充满情感联结", func:"Fe+Si"},          // 原 Ne+Si → Fe+Si
+    {text:"留白，只等某一天遇到真正触动你的艺术品再决定", func:"Ni+Fi"},
+    {text:"先随意贴上海报或便签，以后随时更换，保持新鲜", func:"Se+Ne"}         // 原 Te+Se → Se+Ne
+  ]},
+  
+  // 第7题：选购物品面对海量选项
+  { text:"选购物品面对海量选项，你会？", options:[
+    {text:"先确定核心参数（性能/价格），缩小范围后再凭感觉", func:"Ti+Si"},
+    {text:"直接挑选最符合当下心情的，不纠结参数", func:"Fi+Se"},                // 原 Fe+Ne → Fi+Se
+    {text:"参考朋友或网上的使用评价，以他人体验为准", func:"Fe+Te"},            // 原 Ni+Te → Fe+Te
+    {text:"逐个对比细节材质，相信自己的触觉与视觉判断", func:"Se+Ti"}           // 原 Fi+Se → Se+Ti
+  ]},
+  
+  // 第8题：排队时有人公然插队
+  { text:"排队时有人公然插队，你的第一反应？", options:[
+    {text:"内心迅速评估冲突风险，决定是否值得出声", func:"Fi+Ne"},
+    {text:"用身体自然挡住空隙，无声维护自己的位置", func:"Si+Te"},
+    {text:"直接礼貌提醒对方“请排队”，遵守规则最重要", func:"Fe+Ni"},
+    {text:"观察对方是否真有急事，再决定是否默许", func:"Se+Ti"}
+  ]},
+  
+  // 第9题：坚持无收益的热爱被质疑
+  { text:"坚持无收益的热爱被质疑，你会？", options:[
+    {text:"理性解释这项热爱的长期价值或隐藏收益", func:"Te+Ni"},                // 原 Fi+Se → Te+Ni
+    {text:"微笑回应“我喜欢就够了”，内心毫不动摇", func:"Fi+Ne"},               // 原 Ne+Ti → Fi+Ne
+    {text:"反思自己是否过于理想化，考虑调整投入比例", func:"Ti+Si"},            // 原 Si+Fe → Ti+Si
+    {text:"情绪被触动，但依然温柔地坚持自己的选择", func:"Fe+Fi"}               // 原 Ni+Te → Fe+Fi
+  ]},
+  
+  // 第10题：周密计划被突发情况打断
+  { text:"周密计划被突发情况打断，你会？", options:[
+    {text:"快速计算剩余时间与资源，重新制定B计划", func:"Te+Ni"},               // 原 Fi+Ti → Te+Ni
+    {text:"烦躁片刻后接受现实，转而享受意外的空闲", func:"Se+Fi"},              // 原 Se+Ne → Se+Fi
+    {text:"把这次变故当作新灵感，探索原来没想过的可能性", func:"Ne+Ti"},        // 原 Si+Ni → Ne+Ti
+    {text:"坚持原计划的核心部分，只调整次要环节", func:"Si+Te"}                 // 原 Fe+Te → Si+Te
+  ]},
+  
+  // 第11题：两难抉择，他人建议列利弊打分
+  { text:"两难抉择，他人建议列利弊打分，你会？", options:[
+    {text:"参考利弊清单，但最终听从内心最真实的声音", func:"Fi+Ne"},            // 原 Fe+Ne → Fi+Ne
+    {text:"拉着对方深入讨论，在交流中逐渐明确答案", func:"Fe+Ti"},              // 原 Si+Ti → Fe+Ti
+    {text:"独自推演每个选择的长远后果，直到逻辑闭环", func:"Ni+Se"},
+    {text:"直接采用打分结果，相信数据比感觉更可靠", func:"Te+Fi"}
+  ]},
+  
+  // 第12题：听到直击内心的旋律
+  { text:"听到直击内心的旋律，你会？", options:[
+    {text:"分享给能懂你的那个人，享受心照不宣的共鸣", func:"Fe+Ni"},            // 原 Fe+Si → Fe+Ni
+    {text:"循环播放，让情绪彻底浸泡在旋律里一整天", func:"Fi+Si"},              // 原 Ne+Ti → Fi+Si
+    {text:"搜索作曲背景与乐理分析，理解它为何动人", func:"Ti+Ne"},              // 原 Ni+Fi → Ti+Ne
+    {text:"收藏到专属歌单，等某个特别时刻再重温", func:"Si+Te"}                 // 原 Te+Se → Si+Te
+  ]},
+  
+  // 第13题：与陌生人同乘电梯
+  { text:"与陌生人同乘电梯，你会？", options:[
+    {text:"安静站着，观察楼层按钮和对方的微表情", func:"Se+Ni"},
+    {text:"如果对方眼神友善，就微笑说一句“今天好冷/热”", func:"Fe+Se"},        // 原 Ti+Fe → Fe+Se
+    {text:"默默计算到达时间，脑中整理下一件事的步骤", func:"Te+Si"},            // 原 Si+Ne → Te+Si
+    {text:"放松身体，感受电梯运行的失重与停止", func:"Si+Fi"}                   // 原 Fi+Te → Si+Fi
+  ]},
+  
+  // 第14题：群聊讨论有明显逻辑漏洞
+  { text:"群聊讨论有明显逻辑漏洞，你会？", options:[
+    {text:"先看清发言者的立场与情绪，再决定是否指出", func:"Fe+Ni"},            // 原 Se+Ti → Fe+Ni
+    {text:"直接列出反例和逻辑链，引导讨论回归理性", func:"Ti+Te"},              // 原 Ni+Fe → Ti+Te
+    {text:"私下截图给好友，分析这个漏洞的来源", func:"Si+Ti"},                  // 原 Te+Si → Si+Ti
+    {text:"快速总结自己的观点发出，然后不再纠缠", func:"Te+Ni"}                 // 原 Fi+Ne → Te+Ni
+  ]},
+  
+  // 第15题：学习全新技能
+  { text:"学习全新技能，你的方式是？", options:[
+    {text:"找高手演示一遍，靠模仿身体动作来入门", func:"Se+Te"},                // 原 Te+Si → Se+Te
+    {text:"先拆解核心原理，搞懂“为什么”再动手", func:"Ti+Ne"},                 // 原 Fi+Ne → Ti+Ne
+    {text:"设定阶段性目标，按计划一步步练习", func:"Te+Si"},                    // 原 Se+Ni → Te+Si
+    {text:"直接上手试错，遇到问题再查资料解决", func:"Ne+Ti"}                   // 原 Fe+Ti → Ne+Ti
+  ]},
+  
+  // 第16题：无约束的两天自由时光
+  { text:"无约束的两天自由时光，你会？", options:[
+    {text:"毫无计划，随心情从一件事跳到另一件事", func:"Ne+Se"},
+    {text:"沉浸在一件一直想做的事里，废寝忘食", func:"Ti+Ni"},
+    {text:"提前规划好时间段，保持一定的生活秩序", func:"Si+Te"},                // 原 Fi+Te → Si+Te
+    {text:"完成一两件有意义的小事，让自己有成就感", func:"Fe+Si"}               // 原 Fe+Si → Fe+Si (维持)
+  ]},
+  
+  // 第17题：身边人常对你说的话（反向题）
+  { text:"身边人常对你说的话，最贴合的是？", options:[
+    {text:"你太较真，凡事都要问个为什么", func:"Ti+Ne"},                        // 原 Ti+Fe → Ti+Ne
+    {text:"你太敏感，总能察觉别人没说的情绪", func:"Fe+Ni"},                   // 原 Se+Ni → Fe+Ni (关键修正)
+    {text:"你太固执，认定的事情很难改变", func:"Si+Fi"},                        // 原 Ne+Si → Si+Fi
+    {text:"你想法太多，一会儿一个主意", func:"Ne+Ti"}                           // 原 Te+Fi → Ne+Ti (关键修正)
+  ], reverse: true },
+  
+  // 第18题：与人争执后独处
+  { text:"与人争执后独处，你会？", options:[
+    {text:"回忆自己说了哪些不妥的话，反思表达方式", func:"Fi+Si"},              // 原 Fi+Ne → Fi+Si
+    {text:"很快放下，找点别的事转移注意力", func:"Se+Fe"},                      // 原 Fe+Se → Se+Fe
+    {text:"情绪低落，需要独处很久才能平复", func:"Fi+Ni"},                      // 原 Ti+Ni → Fi+Ni
+    {text:"试着站在对方角度理解，气就消了大半", func:"Fe+Ti"}                  // 原 Si+Te → Fe+Ti
+  ]},
+  
+  // 第19题：被问及五年后生活
+  { text:"被问及五年后生活，你的第一反应？", options:[
+    {text:"有清晰的时间节点与里程碑，按计划推进", func:"Te+Ni"},                // 原 Si+Fe → Te+Ni
+    {text:"描述一种生活氛围感，而非具体职位或地点", func:"Ni+Fi"},              // 原 Te+Ni → Ni+Fi
+    {text:"关注当下正在积累的能力，未来水到渠成", func:"Si+Te"},                // 原 Ne+Fi → Si+Te
+    {text:"大概有几个方向，但细节模糊，享受未知", func:"Ne+Se"}                 // 原 Se+Ti → Ne+Se
+  ]},
+  
+  // 第20题：醒来记得的梦境
+  { text:"醒来记得的梦境，更偏向？", options:[
+    {text:"现实中认识的人与场景，带着怀旧的情绪", func:"Si+Fi"},                // 原 Ne+Ti → Si+Fi
+    {text:"奇异荒诞的情节，像一部超现实短片", func:"Ne+Ti"},                    // 原 Si+Fe → Ne+Ti
+    {text:"强烈的身体感受（坠落/飞翔/窒息），醒来仍有余感", func:"Se+Ni"},      // 原 Ni+Se → Se+Ni
+    {text:"解决了某个现实难题，获得豁然开朗的灵感", func:"Te+Ni"}               // 原 Te+Fi → Te+Ni
+  ]},
+  
+  // 第21题：亲近之人对你的核心评价（双倍题）
+  { text:"亲近之人对你的核心评价，最符合？", options:[
+    {text:"你做事很靠谱，让人安心依赖", func:"Te+Si"},                          // 原 Ni+Ti → Te+Si (关键修正)
+    {text:"你总是想得太多，容易内耗", func:"Ti+Ni"},                            // 原 Fe+Fi → Ti+Ni (关键修正)
+    {text:"你活在自己世界，独特又疏离", func:"Fi+Ni"},                          // 原 Se+Si → Fi+Ni (关键修正)
+    {text:"和你相处很舒服，温柔包容", func:"Fe+Si"}                             // 原 Te+Ne → Fe+Si (关键修正)
+  ], double: true },
+  
+  // 第22题：与至亲挚友产生矛盾
+  { text:"与至亲挚友产生矛盾，你会？", options:[
+    {text:"优先安抚对方情绪，等平静后再聊", func:"Fe+Si"},                      // 原 Ne+Te → Fe+Si
+    {text:"反复复盘，自责自己哪里没做好", func:"Fi+Si"},                        // 原 Si+Se → Fi+Si
+    {text:"冷静几天，理清问题根源再沟通", func:"Ti+Ni"},                        // 原 Ni+Ti → Ti+Ni
+    {text:"直接说出你的受伤感受，不隐藏不回避", func:"Fi+Te"}                   // 原 Fe+Fi → Fi+Te
+  ]},
+  
+  // 第23题：你常被他人误解的核心原因（反向题）
+  { text:"你常被他人误解的核心原因？", options:[
+    {text:"表达简洁，只说结论，省略了思考过程", func:"Te+Ni"},                  // 原 Ti+Ne → Te+Ni
+    {text:"情绪外露，表情语气被错误解读", func:"Fe+Se"},                        // 原 Fi+Fe → Fe+Se
+    {text:"关注点独特，总在意别人忽略的原则", func:"Ti+Si"},                    // 原 Si+Se → Ti+Si
+    {text:"想法发散，探讨被误当作最终表态", func:"Ne+Fi"}                       // 原 Te+Ni → Ne+Fi
+  ], reverse: true },
+  
+  // 第24题：无任何限制，你最理想的一天是？（双倍题）
+  { text:"无任何限制，你最理想的一天是？", options:[
+    {text:"独处静谧空间，沉浸热爱之事，无人打扰", func:"Fi+Ni"},                // 原 Te+Ni → Fi+Ni
+    {text:"探索陌生之地，体验全新风景与烟火气", func:"Se+Ne"},                  // 原 Se+Si → Se+Ne
+    {text:"回归熟悉日常，在小事中获得平静与秩序", func:"Si+Te"},                // 原 Ti+Ne → Si+Te
+    {text:"陪伴亲友知己，畅谈相伴，热闹温暖", func:"Fe+Si"}                     // 原 Fe+Fi → Fe+Si
+  ], double: true }
+];
+
+    // 预计算每个功能在全部选项中的总出现次数（用于标准化得分）
+    const allFunctions = ['Ni','Ne','Si','Se','Ti','Te','Fi','Fe'];
+    function computeFuncOccurrences() {
+      let occ = { Ni:0, Ne:0, Si:0, Se:0, Ti:0, Te:0, Fi:0, Fe:0 };
+      for (let q of questionsData) {
+        for (let opt of q.options) {
+          const parts = opt.func.split('+');
+          for (let f of parts) {
+            if (occ.hasOwnProperty(f)) occ[f]++;
+          }
+        }
+      }
+      return occ;
+    }
+    const funcOccurrences = computeFuncOccurrences();
+
+    // 功能 -> 中心映射
+    const funcToCenter = {
+      'Ni':'脑中心', 'Ne':'脑中心', 'Ti':'脑中心', 'Te':'脑中心',
+      'Fi':'心中心', 'Fe':'心中心',
+      'Si':'腹中心', 'Se':'腹中心'
+    };
+
+    // 双倍计分题号 (0-index)
+    const doubleScoreIndices = [20, 23];
+    // 反向校验题号 (0-index)
+    const reverseIndices = [16, 22];
+    // 中心判定题号 (0-index)
+    const centerIndices = [10, 20, 21, 23];
+
+    // --------------------------------------------------------------
+    // 2. 48组合 → 24原型 映射表 (最终平衡版，每个原型对应两个组合)
+    // key: `${dom}+${aux}+${center}`, value: 原型索引0~23
+    // --------------------------------------------------------------
+    const prototypeMap = new Map();
+    const mappingEntries = [
+  // 0: 微光引路人 (Ni-Fe / 心·脑)
+  { dom:'Ni', aux:'Fe', center:'心中心', protoIdx:0 },
+  { dom:'Ni', aux:'Fe', center:'脑中心', protoIdx:0 },
+  // 1: 理性共情者 (Ti-Ne / 心 / Ne-Ti / 心)
+  { dom:'Ti', aux:'Ne', center:'心中心', protoIdx:1 },
+  { dom:'Ne', aux:'Ti', center:'心中心', protoIdx:1 },
+  // 2: 自由畅想家 (Ne-Fi / 心·脑)
+  { dom:'Ne', aux:'Fi', center:'心中心', protoIdx:2 },
+  { dom:'Ne', aux:'Fi', center:'脑中心', protoIdx:2 },
+  // 3: 感官生活家 (Fi-Se / 心 / Se-Fi / 心)
+  { dom:'Fi', aux:'Se', center:'心中心', protoIdx:3 },
+  { dom:'Se', aux:'Fi', center:'心中心', protoIdx:3 },
+  // 4: 时光守护者 (Si-Te / 心·腹)
+  { dom:'Si', aux:'Te', center:'心中心', protoIdx:4 },
+  { dom:'Si', aux:'Te', center:'腹中心', protoIdx:4 },
+  // 5: 人情联结者 (Si-Fe / 心 / Fe-Si / 心)
+  { dom:'Si', aux:'Fe', center:'心中心', protoIdx:5 },
+  { dom:'Fe', aux:'Si', center:'心中心', protoIdx:5 },
+  // 6: 全局谋略者 (Te-Ni / 脑·心)
+  { dom:'Te', aux:'Ni', center:'脑中心', protoIdx:6 },
+  { dom:'Te', aux:'Ni', center:'心中心', protoIdx:6 },
+  // 7: 本心坚守者 (Fi-Ne / 心·脑)
+  { dom:'Fi', aux:'Ne', center:'心中心', protoIdx:7 },
+  { dom:'Fi', aux:'Ne', center:'脑中心', protoIdx:7 },
+  // 8: 逻辑思辨者 (Ti-Ne / 脑·腹)
+  { dom:'Ti', aux:'Ne', center:'脑中心', protoIdx:8 },
+  { dom:'Ti', aux:'Ne', center:'腹中心', protoIdx:8 },
+  // 9: 创意应变者 (Ne-Ti / 脑·腹)
+  { dom:'Ne', aux:'Ti', center:'脑中心', protoIdx:9 },
+  { dom:'Ne', aux:'Ti', center:'腹中心', protoIdx:9 },
+  // 10: 温和破局者 (Si-Fe / 腹·脑)
+  { dom:'Si', aux:'Fe', center:'腹中心', protoIdx:10 },
+  { dom:'Si', aux:'Fe', center:'脑中心', protoIdx:10 },
+  // 11: 务实行动者 (Se-Ti / 脑·腹)
+  { dom:'Se', aux:'Ti', center:'脑中心', protoIdx:11 },
+  { dom:'Se', aux:'Ti', center:'腹中心', protoIdx:11 },
+  // 12: 经验沉淀者 (Si-Te / 脑 / Ti-Se / 脑) —— 修正：原 Ti-Se 与 Si-Te 同归12
+  { dom:'Si', aux:'Te', center:'脑中心', protoIdx:12 },
+  { dom:'Ti', aux:'Se', center:'脑中心', protoIdx:12 },
+  // 13: 秩序践行者 (Te-Si / 腹·脑)
+  { dom:'Te', aux:'Si', center:'腹中心', protoIdx:13 },
+  { dom:'Te', aux:'Si', center:'脑中心', protoIdx:13 },
+  // 14: 情绪守护者 (Fe-Ni / 腹·心)
+  { dom:'Fe', aux:'Ni', center:'腹中心', protoIdx:14 },
+  { dom:'Fe', aux:'Ni', center:'心中心', protoIdx:14 },
+  // 15: 静默洞察者 (Ni-Fe / 腹 / Fe-Ni / 脑)
+  { dom:'Ni', aux:'Fe', center:'腹中心', protoIdx:15 },
+  { dom:'Fe', aux:'Ni', center:'脑中心', protoIdx:15 },
+  // 16: 底线坚守者 (Te-Ni / 腹 / Fe-Si / 腹) —— 修正：原 Fe-Si 腹 归16
+  { dom:'Te', aux:'Ni', center:'腹中心', protoIdx:16 },
+  { dom:'Fe', aux:'Si', center:'腹中心', protoIdx:16 },
+  // 17: 初心追光者 (Te-Si / 心 / Fe-Si / 脑) —— 修正：原 Fe-Si 脑 归17
+  { dom:'Te', aux:'Si', center:'心中心', protoIdx:17 },
+  { dom:'Fe', aux:'Si', center:'脑中心', protoIdx:17 },
+  // 18: 远见布局者 (Ni-Te / 腹 / Ne-Fi / 腹)
+  { dom:'Ni', aux:'Te', center:'腹中心', protoIdx:18 },
+  { dom:'Ne', aux:'Fi', center:'腹中心', protoIdx:18 },
+  // 19: 静默预判者 (Ni-Te / 脑·心)
+  { dom:'Ni', aux:'Te', center:'脑中心', protoIdx:19 },
+  { dom:'Ni', aux:'Te', center:'心中心', protoIdx:19 },
+  // 20: 独立理性者 (Ti-Se / 腹·心)
+  { dom:'Ti', aux:'Se', center:'腹中心', protoIdx:20 },
+  { dom:'Ti', aux:'Se', center:'心中心', protoIdx:20 },
+  // 21: 真相追寻者 (Fi-Ne / 腹 / Fi-Se / 脑)
+  { dom:'Fi', aux:'Ne', center:'腹中心', protoIdx:21 },
+  { dom:'Fi', aux:'Se', center:'脑中心', protoIdx:21 },
+  // 22: 坚韧自愈者 (Se-Fi / 腹 / Fi-Se / 腹)
+  { dom:'Se', aux:'Fi', center:'腹中心', protoIdx:22 },
+  { dom:'Fi', aux:'Se', center:'腹中心', protoIdx:22 },
+  // 23: 临危定心者 (Se-Ti / 心 / Se-Fi / 脑)
+  { dom:'Se', aux:'Ti', center:'心中心', protoIdx:23 },
+  { dom:'Se', aux:'Fi', center:'脑中心', protoIdx:23 }
+];
+    for (let item of mappingEntries) {
+      const key = `${item.dom}+${item.aux}+${item.center}`;
+      prototypeMap.set(key, item.protoIdx);
+    }
+
+    // 原型显示数据 (顺序与索引对应，文案采用原始完整版本)
+    const prototypesData = [
+  { 
+    title: "微光引路人", 
+    profile: "你像《杀死一只知更鸟》中的阿蒂克斯，脊梁不为胜负挺直，只为心中恒久的道义。你是暗夜里持光的行者，早已习惯独处的沉静，却仍愿为迷雾中漂泊的人高举微光。你被误解为清高疏离，只因你的目光永远投向远方，不屑于当下的喧嚣，你的时间刻度，永远属于未来。", 
+    movie: "肖申克的救赎", 
+    movieDesc: "不用煽情的励志神作，讲透隐忍和坚持的力量，适合心里有执念、愿意默默熬到天亮的你。", 
+    picks: [
+      { title: "《寂静人生》", desc: "节奏很慢但后劲极大，温柔到骨子里，专治内心孤独、偏爱安静故事的人。" },
+      { title: "《熊的故事》", desc: "全程几乎没台词，纯粹又治愈，适合不爱狗血剧情、喜欢沉浸式感受故事的你。" },
+      { title: "《冰山的阴影》", desc: "冷门宝藏纪录片，讲一个普通人的一生浪漫，适合内心细腻、喜欢小众故事的人。" }
+    ] 
+  },
+  { 
+    title: "理性共情者", 
+    profile: "你像《美丽心灵》中的约翰·纳什，以逻辑构建世界的底层语言，内核却渴望被真正看见。你拥有一间独属于自己的思辨暗室，拆解万物规律，最终只为读懂人心的褶皱。你的抽离是保护色，冷静之下，是一份未曾言说的、极致深沉的温柔。", 
+    movie: "心灵捕手", 
+    movieDesc: "不强行鸡汤的治愈片，讲天才如何卸下防备拥抱自己，适合嘴硬心软、习惯用冷静藏温柔的你。", 
+    picks: [
+      { title: "《鲸》", desc: "情绪饱满但不矫情，直面内心的痛苦与和解，适合愿意深度共情、不爱悬浮剧情的人。" },
+      { title: "《海边的曼彻斯特》", desc: "接受遗憾才是常态，不强行圆满，适合清醒通透、拒绝假治愈的你。" },
+      { title: "《莫娣》", desc: "平淡又好哭的爱情，没有轰轰烈烈，适合偏爱细水长流、看重真心的人。" }
+    ] 
+  },
+  { 
+    title: "自由畅想家", 
+    profile: "你像《盗钥匙的方法》中的近藤，人生脱轨亦能随性生长，在未知里开出新的轨迹。你的思绪是永不停歇的弦，在无关的碎片里听见独属于自己的旋律。你拒绝唯一答案，视可能性为呼吸，人生从非直线，而是一片肆意生长、无限分岔的旷野。", 
+    movie: "阿甘正传", 
+    movieDesc: "经典永不过时，人生不用规划，跟着本心走就够了，适合讨厌束缚、喜欢随性活的你。", 
+    picks: [
+      { title: "《没有过去的男人》", desc: "荒诞又温柔，人生随时能重启，适合爱新鲜感、拒绝被定义的人。" },
+      { title: "《日丽》", desc: "用回忆讲故事，视角独特不枯燥，适合心思跳脱、喜欢不一样叙事的你。" },
+      { title: "《世界上最烂的人》", desc: "讲年轻人的迷茫与摇摆，不立人设，适合接纳不完美、活得真实的人。" }
+    ] 
+  },
+  { 
+    title: "感官生活家", 
+    profile: "你像《怦然心动》中的朱莉，以孩童般纯粹的目光，捕捉世间所有具象的美好。你的双眼是永不关机的取景器，光影的层次、风的触感、瞬间的神情，皆是你珍藏的宝藏。你无需宏大叙事，只忠于当下的真实，以五感，拥抱整个世界的鲜活。", 
+    movie: "白日梦想家", 
+    movieDesc: "从脑内幻想奔赴真实冒险，用脚步丈量世界，完美契合以五感拥抱生活、热爱当下鲜活的你。", 
+    picks: [
+      { title: "《拾穗者》", desc: "随手拍的日常都超有美感，小众又舒服，适合喜欢发现生活小美好的人。" },
+      { title: "《碧海蓝天》", desc: "海景封神，氛围感拉满，适合偏爱松弛感、喜欢沉浸式放空观影的你。" },
+      { title: "《天地玄黄》", desc: "无台词纯视听盛宴，走遍全世界，适合不爱复杂剧情、只想享受画面的人。" }
+    ] 
+  },
+  { 
+    title: "时光守护者", 
+    profile: "你像《天堂电影院》中的阿尔弗雷多，守护的不是器物，而是时光里的温度与记忆。旧物的纹路、老歌的前奏、熟悉的气息，皆是你锚定自我的港湾。你非念旧，而是以过往为证，确认温暖真实存在；你的忠诚，藏在日复一日、无声的陪伴与坚守里。", 
+    movie: "海上钢琴师", 
+    movieDesc: "温柔又有力量，讲坚守本心的一生，适合念旧重情、喜欢有温度老故事的你。", 
+    picks: [
+      { title: "《编舟记》", desc: "一群人认真做一件小事，踏实又治愈，适合偏爱安稳、看重长久坚持的人。" },
+      { title: "《内布拉斯加》", desc: "平淡的亲情故事，越看越有味道，适合心思细腻、懂平凡之美的你。" },
+      { title: "《东京物语》", desc: "经典家庭片，不吵不闹讲透亲情，适合重感情、偏爱写实日常的人。" }
+    ] 
+  },
+  { 
+    title: "人情联结者", 
+    profile: "你像《相助》中的斯基特，以倾听为力量，为沉默者发声，以温柔缝合世间的裂痕。你天生能感知空间里的情绪温度，读懂他人未说出口的委屈与孤独。你是天生的摆渡人，本能地渴望联结，以善意作桥，连接每一座孤立的岛屿。", 
+    movie: "放牛班的春天", 
+    movieDesc: "全员治愈，温柔能改变一切，适合心软共情强、喜欢温暖群像故事的你。", 
+    picks: [
+      { title: "《海街日记》", desc: "四姐妹的日常烟火气，治愈所有不开心，适合喜欢温情陪伴、讨厌冲突的人。" },
+      { title: "《鳄鱼波鞋走天涯》", desc: "纯粹的少年友谊，好哭又温暖，适合内心柔软、看重真心联结的你。" },
+      { title: "《小鞋子》", desc: "贫穷但满是善意，全程暖心，适合共情力强、偏爱朴实真诚故事的人。" }
+    ] 
+  },
+  { 
+    title: "全局谋略者", 
+    profile: "你像《极速风流》中的尼基·劳达，以精确的理性与纪律，掌控人生的每一步棋局。你对效率与结果有着极致的敏锐，情绪可暂缓，问题必解决。你非冷酷，只是敬畏因果；你的安全感，来自全盘的规划、清晰的逻辑，与绝不后悔的执行力。", 
+    movie: "教父", 
+    movieDesc: "格局拉满的权谋经典，步步为营全是智慧，适合做事有规划、偏爱高智商博弈的你。", 
+    picks: [
+      { title: "《洞》", desc: "全程高能无废话，极致严谨的越狱片，适合喜欢强逻辑、拒绝拖沓剧情的人。" },
+      { title: "《纽伦堡的审判》", desc: "台词封神，深度思辨不悬浮，适合爱思考、看重剧情内核的你。" },
+      { title: "《锅匠，裁缝，士兵，间谍》", desc: "慢热但烧脑，细节全是伏笔，适合偏爱沉稳叙事、喜欢抠细节的人。" }
+    ] 
+  },
+  { 
+    title: "本心坚守者", 
+    profile: "你像《触不可及》中的菲利普，不屑于世俗的同情，只渴求平等的对视与灵魂的契合。你心中有一把独属于自己的标尺，不迎合、不伪装，清晰地知晓何为热爱、何为不可妥协。你的格格不入，从非叛逆，而是不愿为了合群，丢失最真实的自己。", 
+    movie: "这个杀手不太冷", 
+    movieDesc: "孤独灵魂的双向奔赴，又酷又温柔，适合不愿合群、坚守本心、看重灵魂契合的你。", 
+    picks: [
+      { title: "《钢琴家》", desc: "绝境中守住自我，克制又有力量，适合内心坚韧、不爱刻意煽情的人。" },
+      { title: "《玫瑰人生》", desc: "活得热烈又真实，不完美但足够耀眼，适合敢爱敢恨、做自己的你。" },
+      { title: "《小城之春》", desc: "含蓄又深情，东方独有的温柔，适合内心细腻、偏爱克制表达的人。" }
+    ] 
+  },
+  { 
+    title: "逻辑思辨者", 
+    profile: "你像《模仿游戏》中的艾伦·图灵，拆解世间最复杂的密码，却执着于万物的底层逻辑。你本能地质疑所有约定俗成，不为挑衅，只为求真。你的大脑是永不停歇的解构机器，安全感源于通透的认知，于沉默的思辨中，掌控世界的本质。", 
+    movie: "盗梦空间", 
+    movieDesc: "层层反转烧脑拉满，结构封神无bug，适合爱琢磨剧情、偏爱高智商叙事的你。", 
+    picks: [
+      { title: "《堤》", desc: "极简叙事脑洞极大，全程高能，适合喜欢小众脑洞、拒绝俗套剧情的人。" },
+      { title: "《日月无光》", desc: "跳出常规讲故事，思维感拉满，适合不爱流水线大片、喜欢独特叙事的你。" },
+      { title: "《彗星来的那一夜》", desc: "小成本烧脑神作，越想越上头，适合爱推理、喜欢细品剧情的人。" }
+    ] 
+  },
+  { 
+    title: "创意应变者", 
+    profile: "你像《摇滚校园》中的杜威·芬，打破刻板规则，以创意点燃所有可能性。你的脑海是永不打烊的工坊，一个念头未落，下一个已然成型。你拒绝固化，坚信变数即是生机，你的灵活从非善变，而是永远为新的视角，留足余地。", 
+    movie: "楚门的世界", 
+    movieDesc: "打破束缚追求自由，脑洞与治愈并存，适合讨厌一成不变、向往自由与新鲜感的你。", 
+    picks: [
+      { title: "《面包与郁金香》", desc: "半路人生逆袭，轻松治愈不狗血，适合喜欢松弛感、偏爱意外惊喜的人。" },
+      { title: "《大佛普拉斯》", desc: "黑色幽默拉满，越看越有深意，适合不爱俗套、喜欢有梗有深度的你。" },
+      { title: "《死亡论文》", desc: "反转不停悬念拉满，全程不拖沓，适合爱追剧式观影、喜欢高能剧情的人。" }
+    ] 
+  },
+  { 
+    title: "温和破局者", 
+    profile: "你像《国际市场》中的德秀，外表柔软谦和，内心藏着坚不可摧的底线。你不擅强硬对抗，却以耐心与包容，悄悄打破僵局。他人以为你随和易处，却不知你心中的红线，从未退让半分。你拆墙从不用蛮力，时间与温柔，便是你最强大的力量。", 
+    movie: "飞越疯人院", 
+    movieDesc: "温柔反抗不公，后劲极大，适合外柔内刚、有底线、偏爱有力量故事的你。", 
+    picks: [
+      { title: "《柏林苍穹下》", desc: "浪漫又温柔，治愈内心疲惫，适合心思柔软、喜欢诗意治愈的人。" },
+      { title: "《樱桃的滋味》", desc: "慢节奏聊透生死，平静又有力量，适合内心通透、偏爱深度治愈的人。" },
+      { title: "《帕特森》", desc: "平凡日常里的小美好，松弛解压，适合讨厌焦虑、喜欢安稳治愈的人。" }
+    ] 
+  },
+  { 
+    title: "务实行动者", 
+    profile: "你像《极盗车神》中的宝贝，以身体为标尺，用行动代替语言，执行力刻进本能。你的感官是最精准的仪器，触感、节奏、临场反应，胜过千言万语。你不信空想，只信实操；知识不存于脑海，而藏于指尖、脊椎，与每一次干脆利落的行动里。", 
+    movie: "疯狂的麦克斯：狂暴之路", 
+    movieDesc: "全程高能无尿点，实景拍摄爽感拉满，适合不爱废话、偏爱干脆利落强爽片的你。", 
+    picks: [
+      { title: "《大逃亡》", desc: "硬核实干派封神，全程紧凑，适合喜欢踏实叙事、拒绝悬浮剧情的人。" },
+      { title: "《突袭》", desc: "打戏封神拳拳到肉，纯爽无废话，适合偏爱强节奏、喜欢沉浸式观影的你。" },
+      { title: "《天地悠悠》", desc: "安静又有力量，沉浸式感受自然，适合喜欢放空、不爱吵闹剧情的人。" }
+    ] 
+  },
+  { 
+    title: "经验沉淀者", 
+    profile: "你像《人生如戏》中的罗杰·埃伯特，以记忆为馆藏，守护时光里的细节与秩序。你熟记所有可靠的规律，以过往经验规避风险，谨慎而清醒。你的世界藏着无数独属于自己的时光密钥，秩序从非束缚，而是你抵御混乱、获得安全感的温柔铠甲。", 
+    movie: "入殓师", 
+    movieDesc: "温柔讲透生死与离别，治愈又踏实，适合心思稳重、偏爱有温度写实故事的你。", 
+    picks: [
+      { title: "《寂静之海》", desc: "安静又深情，执念里全是温柔，适合念旧细腻、喜欢慢节奏治愈的人。" },
+      { title: "《托尼·厄德曼》", desc: "荒诞又暖心，讲亲情和解，适合看重感情、偏爱真实接地气故事的人。" },
+      { title: "《悲情城市》", desc: "厚重有质感，时代里的平凡人生，适合喜欢沉淀、偏爱有分量故事的人。" }
+    ] 
+  },
+  { 
+    title: "秩序践行者", 
+    profile: "你像《闻香识女人》中的弗兰克，心中有一套不可撼动的秩序，坚守原则，明辨是非。你偏爱万物归位，秩序能抚平所有焦躁，让你获得内心的平静。你非固执，而是坚信混乱可被规则化解；你的靠谱，是一种选择，是成为他人可安心依靠的港湾。", 
+    movie: "国王的演讲", 
+    movieDesc: "直面缺点逆风翻盘，踏实励志不鸡汤，适合做事靠谱、坚守原则、偏爱正向成长的你。", 
+    picks: [
+      { title: "《对话》", desc: "细节拉满悬念十足，沉稳不拖沓，适合喜欢抠细节、偏爱严谨叙事的人。" },
+      { title: "《十二怒汉》", desc: "一室之内全是博弈，台词封神，适合爱思辨、看重逻辑与正义的你。" },
+      { title: "《窃听风暴》", desc: "沉默的善意最动人，后劲十足，适合内心温柔、坚守底线的人。" }
+    ] 
+  },
+  { 
+    title: "情绪守护者", 
+    profile: "你像《幸福终点站》中的维克多，于绝境中仍以善意待人，本能地共情他人的苦难。你的情绪与他人深度共振，见人受伤，自身便会心生刺痛。你无法漠视不公，天生拥有承载情感重量的能力，以温柔为盾，守护身边人，柔软却无比坚韧。", 
+    movie: "辛德勒的名单", 
+    movieDesc: "至暗时刻的善意封神，克制又震撼，适合心软善良、有同理心、偏爱有力量温情的你。", 
+    picks: [
+      { title: "《卢旺达饭店》", desc: "平凡人的英雄主义，揪心又暖心，适合共情力强、看重善良与坚守的人。" },
+      { title: "《辩护人》", desc: "普通人的勇气逆袭，热血又好哭，适合内心有正义、偏爱成长叙事的你。" },
+      { title: "《至暗时刻》", desc: "语言的力量封神，燃点十足，适合内心坚定、喜欢热血正向故事的人。" }
+    ] 
+  },
+  { 
+    title: "静默洞察者", 
+    profile: "你像《后窗》中的杰弗瑞，静默旁观，却洞悉世间所有的人心与真相。你不热衷合群，习惯以目光参与，沉默收集所有细节与情绪。你的寡言从非空洞，而是沉淀；不轻易发声，只因早已看透全局，清醒而通透，冷静而悲悯。", 
+    movie: "死亡诗社", 
+    movieDesc: "温柔唤醒内心的力量，后劲极大，适合安静内敛、心思通透、偏爱深度成长的你。", 
+    picks: [
+      { title: "《狩猎》", desc: "人性现实到扎心，全程压抑但封神，适合清醒通透、不爱无脑爽片的人。" },
+      { title: "《一一》", desc: "讲透人的一生，平淡却全是真相，适合心思细腻、喜欢写实人生故事的你。" },
+      { title: "《Hello！树先生》", desc: "底层人的沉默悲歌，越看越心酸，适合共情深刻、偏爱现实题材的人。" }
+    ] 
+  },
+  { 
+    title: "底线坚守者", 
+    profile: "你像《老爷车》中的沃尔特，筑起边界守护自我，却愿为正义，卸下所有铠甲。你天生清晰是非的边界，领地不可侵犯，原则不容践踏。你外冷内热，边界是你的保护色；一旦交付信任，便会倾尽全力，守护你认定的人与正义。", 
+    movie: "绿皮书", 
+    movieDesc: "跨越偏见的双向治愈，幽默又暖心，适合外冷内热、有边界感、偏爱温情治愈的你。", 
+    picks: [
+      { title: "《七宗罪》", desc: "悬疑封神后劲十足，人性拉满，适合喜欢强剧情、偏爱深度悬疑的人。" },
+      { title: "《无间道》", desc: "港片巅峰，正邪拉扯全程高能，适合爱博弈、喜欢紧凑剧情的你。" },
+      { title: "《寄生虫》", desc: "反转扎心现实，全程无尿点，适合偏爱现实题材、喜欢有深度爽片的人。" }
+    ] 
+  },
+  { 
+    title: "初心追光者", 
+    profile: "你像《隐藏人物》中的凯瑟琳，无视偏见与阻碍，以实力奔赴心中的目标。你需要方向与意义，不为虚名，只为脚踏实地的前行。你非偏执，而是坚信行动铸就价值；每一次完成，每一步前行，都是你确认自我、奔赴热爱的证明。", 
+    movie: "当幸福来敲门", 
+    movieDesc: "普通人的逆袭封神，真实励志不煽情，适合踏实努力、心怀目标、偏爱现实励志的你。", 
+    picks: [
+      { title: "《点球成金》", desc: "打破常规逆风翻盘，理性又热血，适合做事有方法、偏爱成长逆袭的人。" },
+      { title: "《社交网络》", desc: "天才的创业之路，节奏紧凑，适合有野心、喜欢搞事业叙事的你。" },
+      { title: "《奔腾年代》", desc: "低谷逆袭热血治愈，适合心怀热爱、偏爱正能量成长故事的人。" }
+    ] 
+  },
+  { 
+    title: "远见布局者", 
+    profile: "你像《火星救援》中的马克，于绝境中保持清醒，以全局思维，构建生存的秩序。你看见的从非眼前表象，而是万物的底层结构与未来走向。你不迷信确定性，只信自我迭代的认知；于动荡中保持冷静，以远见，掌控人生的全盘走向。", 
+    movie: "2001太空漫游", 
+    movieDesc: "格局宏大封神，越品越有深度，适合眼光长远、偏爱宏大叙事、喜欢深度思考的你。", 
+    picks: [
+      { title: "《潜行者》", desc: "氛围感拉满，深度探讨内心信仰，适合心思深沉、偏爱小众深度片的人。" },
+      { title: "《失衡生活》", desc: "视听震撼，看透世界运转规律，适合喜欢宏观视角、不爱俗套剧情的你。" },
+      { title: "《地球之盐》", desc: "纪录片天花板，走遍世界看尽人间，适合格局开阔、偏爱厚重故事的人。" }
+    ] 
+  },
+  { 
+    title: "静默预判者", 
+    profile: "你像《总统班底》中的深喉，静默蛰伏，洞悉全局，于无声中指引真相。你从不急于行动，早已在脑海中推演所有结局，精准预判每一步走向。你寡言深沉，所有思考皆藏于心底；沉默不是怯懦，而是谋定而后动的极致智慧。", 
+    movie: "教父2", 
+    movieDesc: "权谋与孤独并存，格局拉满，适合心思深沉、谋定后动、偏爱高阶博弈的你。", 
+    picks: [
+      { title: "《纸牌屋》", desc: "权谋博弈全程高能，步步为营，适合喜欢算计人心、偏爱强剧情的人。" },
+      { title: "《东方快车谋杀案》", desc: "经典推理反转封神，细节拉满，适合爱推理、喜欢悬疑群像的你。" },
+      { title: "《迈克尔·克莱顿》", desc: "成人世界的冷静博弈，沉稳有力量，适合偏爱成熟叙事、拒绝狗血的人。" }
+    ] 
+  },
+  { 
+    title: "独立理性者", 
+    profile: "你像《少年派的奇幻漂流》中的派，以自我构建的逻辑，与绝境共生，坚守内心秩序。你拥有一套独属于自己的生存法则，不被外界规训，不向世俗妥协。你的独立从非孤僻，而是内心足够自洽；你自己便是秩序，无需外界给予平衡与安稳。", 
+    movie: "星际穿越", 
+    movieDesc: "科幻与温柔并存，脑洞与治愈双封神，适合内心独立、爱思考、偏爱硬核温情片的你。", 
+    picks: [
+      { title: "《互联网之子》", desc: "真实又揪心，坚守理想的一生，适合内心坚定、不爱随波逐流的人。" },
+      { title: "《发条橙》", desc: "脑洞大胆直击人性，越看越上头，适合喜欢独特视角、偏爱深度人性片的你。" },
+      { title: "《特写》", desc: "真实改编，讲透自我与谎言，适合心思通透、偏爱小众写实故事的人。" }
+    ] 
+  },
+  { 
+    title: "真相追寻者", 
+    profile: "你像《华盛顿邮报》中的凯瑟琳，厌恶虚伪与妥协，以勇气，追寻赤裸的真相。你对真实有着生理性的渴求，宁愿直面残酷，也不沉溺舒适的幻觉。你或许不讨喜，却永远坦诚；你的真实，是留给自己，也是留给身边人，最干净的呼吸。", 
+    movie: "聚焦", 
+    movieDesc: "真实事件改编，沉默坚守揭开真相，适合讨厌虚伪、坚守真诚、偏爱现实题材的你。", 
+    picks: [
+      { title: "《成为约翰·马尔科维奇》", desc: "脑洞清奇不狗血，探寻自我真相，适合喜欢小众脑洞、拒绝俗套的人。" },
+      { title: "《暖暖内含光》", desc: "爱情与记忆的博弈，真实又治愈，适合看重真心、偏爱独特爱情叙事的你。" },
+      { title: "《燃烧》", desc: "氛围感拉满，虚实交织耐人寻味，适合心思细腻、喜欢留白式剧情的人。" }
+    ] 
+  },
+  { 
+    title: "坚韧自愈者", 
+    profile: "你像《立春》中的王彩玲，接纳人生的裂痕，于伤痕中，坚守心底的热爱。你不追求完美的假象，深知裂痕是光照进来的地方，不掩饰伤痛，不强行治愈。你与遗憾共生，与伤痕同行；你的坚韧，从非无坚不摧，而是哭过痛过，依然选择热爱。", 
+    movie: "心灵奇旅", 
+    movieDesc: "接纳遗憾与平凡，治愈内心伤痕，教会你与生活和解，契合坚韧自愈、拥抱不完美的你。", 
+    picks: [
+      { title: "《血色将至》", desc: "人性刻画入骨，压抑但封神，适合喜欢深度人性、偏爱厚重叙事的人。" },
+      { title: "《大师》", desc: "灵魂双向拉扯，治愈又扎心，适合内心有伤痕、偏爱深度情感片的你。" },
+      { title: "《杀人回忆》", desc: "真实悬案改编，遗憾里全是力量，适合心思沉重、偏爱现实悬疑的人。" }
+    ] 
+  },
+  { 
+    title: "临危定心者", 
+    profile: "你像《地心引力》中的瑞恩，于绝境中保持本心，越动荡，越沉静。你是风暴中心的定海神针，慌乱从无意义，本能地稳住重心，看清局势，果断行动。你的冷静从非天生，而是刻进骨子里的坚韧；风暴终会散去，而你，永远是那个坚守到最后的人。", 
+    movie: "一切尽失", 
+    movieDesc: "绝境孤身求生，全程克制沉稳，完美契合临危不乱、坚守本心、绝境定心的你。", 
+    picks: [
+      { title: "《蜂蜜之地》", desc: "温柔坚守内心平静，治愈所有焦虑，适合讨厌浮躁、喜欢松弛感的人。" },
+      { title: "《猎人》", desc: "自然治愈内心风暴，安静又有力量，适合遇事沉稳、偏爱沉浸式治愈的你。" },
+      { title: "《德州巴黎》", desc: "与过往和解，温柔又释怀，适合内心坚韧、喜欢慢节奏治愈的人。" }
+    ] 
+  }
+];
+    // ------------------ 计分核心函数 ------------------
+    function computeResult(answers) {
+      // 原始分 & 双倍贡献分
+      let scores = { Ni:0, Ne:0, Si:0, Se:0, Ti:0, Te:0, Fi:0, Fe:0 };
+      let doubleScores = { Ni:0, Ne:0, Si:0, Se:0, Ti:0, Te:0, Fi:0, Fe:0 };
+      for (let i = 0; i < answers.length; i++) {
+        const optIdx = answers[i];
+        if (optIdx === null) continue;
+        const opt = questionsData[i].options[optIdx];
+        const parts = opt.func.split('+');
+        const weight = doubleScoreIndices.includes(i) ? 1.5 : 1;
+        for (let f of parts) {
+          scores[f] += weight;
+          if (doubleScoreIndices.includes(i)) doubleScores[f] += weight;
+        }
+      }
+      // 标准化得分
+      let normScores = {};
+      for (let f of allFunctions) {
+        normScores[f] = scores[f] / (funcOccurrences[f] || 1);
+      }
+      // 排序 (标准化得分降序，同分比较双倍分)
+      let sorted = [...allFunctions].sort((a,b) => {
+        if (normScores[b] !== normScores[a]) return normScores[b] - normScores[a];
+        return doubleScores[b] - doubleScores[a];
+      });
+      let dominant = sorted[0];
+      // 反向校验 - 软惩罚（若反向题选中主导，则主导得分×0.9）
+      // 既修正偏差，又保留原始倾向的连续性
+      for (let idx of reverseIndices) {
+        if (answers[idx] !== null) {
+          const opt = questionsData[idx].options[answers[idx]];
+          const parts = opt.func.split('+');
+          if (parts.includes(dominant)) {
+            normScores[dominant] *= 0.9;
+            sorted = [...allFunctions].sort((a,b) => {
+              if (normScores[b] !== normScores[a]) return normScores[b] - normScores[a];
+              return doubleScores[b] - doubleScores[a];
+            });
+            dominant = sorted[0];
+          }
+        }
+      }
+      // 辅助功能: 内外倾相反 + 感知/判断互补
+      const isIntro = (f) => ['Ni','Si','Ti','Fi'].includes(f);
+      const isJudging = (f) => ['Ti','Te','Fi','Fe'].includes(f);
+      const domIntro = isIntro(dominant);
+      const domJudge = isJudging(dominant);
+      let candidates = [];
+      for (let f of allFunctions) {
+        if (f === dominant) continue;
+        if (isIntro(f) === domIntro) continue;
+        if (domJudge && isJudging(f)) continue;
+        if (!domJudge && !isJudging(f)) continue;
+        candidates.push(f);
+      }
+      if (candidates.length === 0) candidates = sorted.filter(f => f !== dominant);
+      candidates.sort((a,b) => {
+        if (normScores[b] !== normScores[a]) return normScores[b] - normScores[a];
+        return doubleScores[b] - doubleScores[a];
+      });
+      let auxiliary = candidates[0] || sorted[1];
+      // 三中心判定
+      let centerCount = { '脑中心':0, '心中心':0, '腹中心':0 };
+      for (let idx of centerIndices) {
+        if (answers[idx] !== null) {
+          const opt = questionsData[idx].options[answers[idx]];
+          const parts = opt.func.split('+');
+          for (let f of parts) {
+            if (funcToCenter[f]) centerCount[funcToCenter[f]]++;
+          }
+        }
+      }
+      let center = '脑中心';
+      if (centerCount['心中心'] > centerCount['脑中心']) center = '心中心';
+      if (centerCount['腹中心'] > centerCount[center]) center = '腹中心';
+      // 映射原型
+      const key = `${dominant}+${auxiliary}+${center}`;
+      const protoIdx = prototypeMap.get(key);
+      return (protoIdx !== undefined) ? protoIdx : 0;
+    }
+
+    // ------------------ UI 交互 ------------------
+    let currentIndex = 0;
+    let answers = new Array(24).fill(null);
+    let slidesContainer, quizScreen, resultScreen, homeScreen, resultLongImg, resultTextCard;
+
+    function buildSlides() {
+      let html = '';
+      for (let i = 0; i < questionsData.length; i++) {
+        const q = questionsData[i];
+        html += `
+          <div class="question-slide" data-index="${i}">
+            <img class="slide-bg-img" src="./images/q${i+1}.png" alt="背景" onerror="this.style.backgroundColor='#8faa87'; this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'%3E%3Crect width=\\'100\\' height=\\'100\\' fill=\\'%23a1b89b\\'/%3E%3C/svg%3E';">
+            <div class="question-content">
+              <div class="progress-header"><span>第${i+1}/24题</span><span>${i<6?'感知':i<12?'判断':i<18?'外倾':'内倾'}</span></div>
+              <div class="question-text">${q.text}</div>
+              <div class="options-list" id="options-${i}"></div>
+              <div class="nav-indicator" id="indicator-${i}"></div>
+              <div class="swipe-hint">← 左右滑动切换 · 点击选项自动下一题 →</div>
+            </div>
+          </div>
+        `;
+      }
+      slidesContainer.innerHTML = html;
+      for (let i = 0; i < questionsData.length; i++) {
+        const optsDiv = document.getElementById(`options-${i}`);
+        const indicator = document.getElementById(`indicator-${i}`);
+        questionsData[i].options.forEach((opt, idx) => {
+          const optDiv = document.createElement('div');
+          optDiv.className = 'option-item';
+          optDiv.textContent = opt.text;
+          optDiv.addEventListener('click', () => handleOptionClick(i, idx));
+          optsDiv.appendChild(optDiv);
+        });
+        for (let j = 0; j < 24; j++) {
+          const dot = document.createElement('span');
+          dot.className = 'dot' + (j === i ? ' active' : '');
+          indicator.appendChild(dot);
+        }
+      }
+      updateSlidePosition();
+      updateSelectedStyles();
+    }
+
+    function updateSelectedStyles() {
+      for (let i = 0; i < questionsData.length; i++) {
+        const optsDiv = document.getElementById(`options-${i}`);
+        if (!optsDiv) continue;
+        const items = optsDiv.querySelectorAll('.option-item');
+        items.forEach((item, idx) => {
+          if (answers[i] === idx) item.classList.add('selected');
+          else item.classList.remove('selected');
+        });
+      }
+    }
+
+    function handleOptionClick(qIndex, optIndex) {
+      if (answers[qIndex] === optIndex) return;
+      answers[qIndex] = optIndex;
+      updateSelectedStyles();
+      if (qIndex === 23) {
+        if (answers.every(a => a !== null)) showResult();
+        return;
+      }
+      currentIndex = qIndex + 1;
+      updateSlidePosition();
+    }
+
+    function updateSlidePosition() {
+      slidesContainer.style.transform = `translateX(-${currentIndex * 100}%)`;
+      for (let i = 0; i < questionsData.length; i++) {
+        const indicator = document.getElementById(`indicator-${i}`);
+        if (indicator) {
+          const dots = indicator.querySelectorAll('.dot');
+          dots.forEach((dot, idx) => dot.classList.toggle('active', idx === currentIndex));
+        }
+      }
+    }
+
+    let touchStartX = 0;
+    function bindSwipe() {
+      const viewport = document.getElementById('quizViewport');
+      viewport.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, {passive: true});
+      viewport.addEventListener('touchend', (e) => {
+        if (!touchStartX) return;
+        const diff = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(diff) > 40) {
+          if (diff < 0 && currentIndex < 23) currentIndex++;
+          else if (diff > 0 && currentIndex > 0) currentIndex--;
+          updateSlidePosition();
+        }
+        touchStartX = 0;
+      });
+    }
+
+    function showResult() {
+      const protoIdx = computeResult(answers);
+      const proto = prototypesData[protoIdx];
+      resultLongImg.onload = () => resultTextCard.classList.add('hidden');
+      resultLongImg.onerror = () => {
+        resultLongImg.classList.add('hidden');
+        resultTextCard.classList.remove('hidden');
+        renderTextCard(proto);
+      };
+      resultLongImg.src = `./images/result/prototype_${protoIdx+1}.png`;
+      quizScreen.classList.add('hidden');
+      resultScreen.classList.remove('hidden');
+      homeScreen.classList.add('hidden');
+    }
+
+    function renderTextCard(proto) {
+      const picksHtml = proto.picks.map(p => `<div class="proto-pick-item"><div class="proto-pick-title">${p.title}</div><div class="proto-pick-desc">${p.desc}</div></div>`).join('');
+      resultTextCard.innerHTML = `
+        <div class="proto-hero"><div class="proto-title">${proto.title}</div><div class="proto-profile">${proto.profile}</div></div>
+        <div class="proto-section-label">人生电影</div><div class="proto-movie-card"><div class="proto-movie-title">${proto.movie}</div><div class="proto-movie-desc">${proto.movieDesc}</div></div>
+        <div class="proto-section-label">私藏佳片</div><div class="proto-picks-wrap">${picksHtml}</div>
+      `;
+    }
+
+    function restartQuiz() {
+      answers = new Array(24).fill(null);
+      currentIndex = 0;
+      updateSlidePosition();
+      updateSelectedStyles();
+      resultScreen.classList.add('hidden');
+      resultTextCard.classList.add('hidden');
+      resultLongImg.classList.remove('hidden');
+      quizScreen.classList.remove('hidden');
+      homeScreen.classList.add('hidden');
+    }
+
+    function init() {
+      slidesContainer = document.getElementById('slidesContainer');
+      quizScreen = document.getElementById('quizScreen');
+      resultScreen = document.getElementById('resultScreen');
+      homeScreen = document.getElementById('homeScreen');
+      resultLongImg = document.getElementById('resultLongImg');
+      resultTextCard = document.getElementById('resultTextCard');
+      buildSlides();
+      bindSwipe();
+      document.getElementById('startBtn').addEventListener('click', () => { homeScreen.classList.add('hidden'); quizScreen.classList.remove('hidden'); restartQuiz(); });
+      document.getElementById('restartFromResult').addEventListener('click', () => restartQuiz());
+    }
+    init();
+  })();
+</script>
+</body>
+</html>
