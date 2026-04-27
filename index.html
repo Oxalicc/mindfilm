@@ -49,7 +49,7 @@
 
     /* 首页 */
     #homeScreen {
-      background: url('./images/bg.png') center center / cover no-repeat;
+      background: url('./images/bg.webp') center center / cover no-repeat;
       padding: 24px 20px;
       display: flex;
       flex-direction: column;
@@ -373,7 +373,8 @@
       <span style="font-size: 0.8rem; color: #7a9a6e;">长按保存</span>
       <span class="restart-link" id="restartFromResult">↻ 重测</span>
     </div>
-    <img id="resultLongImg" class="result-long-img" src="" alt="原型长图" />
+    <img id="resultLongImg" class="result-long-img hidden" src="" alt="原型长图" />
+    <div id="resultLoading" style="display: flex; justify-content: center; align-items: center; min-height: 60vh; color: #8aaa7e; font-size: 1rem;">✨ 正在生成你的人生电影...</div>
     <div id="resultTextCard" class="result-text-card hidden"></div>
   </div>
 </div>
@@ -1056,9 +1057,12 @@
       let html = '';
       for (let i = 0; i < questionsData.length; i++) {
         const q = questionsData[i];
+        const imgSrc = i === 0 ? `./images/q${i+1}.webp` : '';
+        const prevSrc = i === 1 ? `./images/q${i}.webp` : '';
+        const nextSrc = i === 0 ? `./images/q${i+2}.webp` : '';
         html += `
           <div class="question-slide" data-index="${i}">
-            <img class="slide-bg-img" src="./images/q${i+1}.png" alt="背景" onerror="this.style.backgroundColor='#8faa87'; this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'%3E%3Crect width=\\'100\\' height=\\'100\\' fill=\\'%23a1b89b\\'/%3E%3C/svg%3E';">
+            <img class="slide-bg-img" src="${imgSrc}" data-src="./images/q${i+1}.png" data-prev="${prevSrc}" data-next="${nextSrc}" alt="背景" onerror="this.style.backgroundColor='#8faa87'; this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'%3E%3Crect width=\\'100\\' height=\\'100\\' fill=\\'%23a1b89b\\'/%3E%3C/svg%3E';">
             <div class="question-content">
               <div class="progress-header"><span>第${i+1}/24题</span><span>${i<6?'感知':i<12?'判断':i<18?'外倾':'内倾'}</span></div>
               <div class="question-text">${q.text}</div>
@@ -1123,6 +1127,26 @@
           dots.forEach((dot, idx) => dot.classList.toggle('active', idx === currentIndex));
         }
       }
+      preloadAdjacentImages(currentIndex);
+    }
+
+    function preloadAdjacentImages(idx) {
+      // 加载当前、前一张、后一张
+      const toPreload = [idx];
+      if (idx > 0) toPreload.push(idx - 1);
+      if (idx < questionsData.length - 1) toPreload.push(idx + 1);
+      
+      document.querySelectorAll('.slide-bg-img').forEach(img => {
+        const imgIdx = parseInt(img.closest('.question-slide').dataset.index);
+        if (toPreload.includes(imgIdx)) {
+          const src = img.dataset.src;
+          if (src && img.src !== src) {
+            img.src = src;
+          }
+        } else {
+          img.src = '';
+        }
+      });
     }
 
     let touchStartX = 0;
@@ -1144,13 +1168,21 @@
     function showResult() {
       const protoIdx = computeResult(answers);
       const proto = prototypesData[protoIdx];
-      resultLongImg.onload = () => resultTextCard.classList.add('hidden');
+      const resultLoading = document.getElementById('resultLoading');
+      resultLongImg.classList.add('hidden');
+      resultLoading.style.display = 'flex';
+      resultLongImg.onload = () => {
+        resultLongImg.classList.remove('hidden');
+        resultLoading.style.display = 'none';
+        resultTextCard.classList.add('hidden');
+      };
       resultLongImg.onerror = () => {
         resultLongImg.classList.add('hidden');
+        resultLoading.style.display = 'none';
         resultTextCard.classList.remove('hidden');
         renderTextCard(proto);
       };
-      resultLongImg.src = `./images/result/p${protoIdx+1}.jpg`;
+      resultLongImg.src = `./images/result/p${protoIdx+1}.webp`;
       quizScreen.classList.add('hidden');
       resultScreen.classList.remove('hidden');
       homeScreen.classList.add('hidden');
@@ -1183,6 +1215,7 @@
       resultScreen = document.getElementById('resultScreen');
       homeScreen = document.getElementById('homeScreen');
       resultLongImg = document.getElementById('resultLongImg');
+      document.getElementById('resultLoading');
       resultTextCard = document.getElementById('resultTextCard');
       buildSlides();
       bindSwipe();
