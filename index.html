@@ -108,7 +108,7 @@
       display: flex;
       width: 100%;
       height: 100%;
-      transition: transform 0.25s ease-out;
+      transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
       will-change: transform;
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
@@ -1056,49 +1056,60 @@
     function buildSlides() {
       let html = '';
       for (let i = 0; i < questionsData.length; i++) {
-        const q = questionsData[i];
-        const imgSrc = i === 0 ? `./images/q${i+1}.webp` : '';
-        const prevSrc = i === 1 ? `./images/q${i}.webp` : '';
-        const nextSrc = i === 0 ? `./images/q${i+2}.webp` : '';
-        html += `
-          <div class="question-slide" data-index="${i}">
-            <img class="slide-bg-img" src="${imgSrc}" data-src="./images/q${i+1}.webp" data-prev="${prevSrc}" data-next="${nextSrc}" alt="背景" onerror="this.style.backgroundColor='#8faa87'; this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'%3E%3Crect width=\\'100\\' height=\\'100\\' fill=\\'%23a1b89b\\'/%3E%3C/svg%3E';">
-            <div class="question-content">
-              <div class="progress-header"><span>第${i+1}/24题</span><span>${i<6?'感知':i<12?'判断':i<18?'外倾':'内倾'}</span></div>
-              <div class="question-text">${q.text}</div>
-              <div class="options-list" id="options-${i}"></div>
-              <div class="nav-indicator" id="indicator-${i}"></div>
-              <div class="swipe-hint">← 左右滑动切换 · 点击选项自动下一题 →</div>
-            </div>
-          </div>
-        `;
+        html += `<div class="question-slide" data-index="${i}"></div>`;
       }
       slidesContainer.innerHTML = html;
-      for (let i = 0; i < questionsData.length; i++) {
-        const optsDiv = document.getElementById(`options-${i}`);
-        const indicator = document.getElementById(`indicator-${i}`);
-        questionsData[i].options.forEach((opt, idx) => {
-          const optDiv = document.createElement('div');
-          optDiv.className = 'option-item';
-          optDiv.textContent = opt.text;
-          optDiv.addEventListener('click', () => handleOptionClick(i, idx));
-          optsDiv.appendChild(optDiv);
-        });
-        for (let j = 0; j < 24; j++) {
-          const dot = document.createElement('span');
-          dot.className = 'dot' + (j === i ? ' active' : '');
-          indicator.appendChild(dot);
-        }
+      // 初始只加载当前题及相邻题的内容
+      injectSlideContent(currentIndex);
+      if (currentIndex > 0) injectSlideContent(currentIndex - 1);
+      if (currentIndex < questionsData.length - 1) injectSlideContent(currentIndex + 1);
+      updateIndicators();
+    }
+
+    // 按需生成题目内容
+    function injectSlideContent(idx) {
+      const slide = document.querySelector(`.question-slide[data-index="${idx}"]`);
+      if (!slide || slide.dataset.loaded === 'true') return;
+
+      const q = questionsData[idx];
+      slide.innerHTML = `
+        <img class="slide-bg-img" src="./images/q${idx+1}.webp" alt="背景" onerror="this.style.backgroundColor='#8faa87'; this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'%3E%3Crect width=\\'100\\' height=\\'100\\' fill=\\'%23a1b89b\\'/%3E%3C/svg%3E';">
+        <div class="question-content">
+          <div class="progress-header"><span>第${idx+1}/24题</span><span>${idx<6?'感知':idx<12?'判断':idx<18?'外倾':'内倾'}</span></div>
+          <div class="question-text">${q.text}</div>
+          <div class="options-list"></div>
+          <div class="nav-indicator"></div>
+          <div class="swipe-hint">← 左右滑动切换 · 点击选项自动下一题 →</div>
+        </div>
+      `;
+
+      // 动态生成选项
+      const optsDiv = slide.querySelector('.options-list');
+      q.options.forEach((opt, optIdx) => {
+        const optDiv = document.createElement('div');
+        optDiv.className = 'option-item';
+        optDiv.textContent = opt.text;
+        optDiv.dataset.optIndex = optIdx;
+        if (answers[idx] === optIdx) optDiv.classList.add('selected');
+        optsDiv.appendChild(optDiv);
+      });
+
+      // 动态生成指示器
+      const indicator = slide.querySelector('.nav-indicator');
+      for (let j = 0; j < 24; j++) {
+        const dot = document.createElement('span');
+        dot.className = 'dot' + (j === idx ? ' active' : '');
+        indicator.appendChild(dot);
       }
-      updateSlidePosition();
-      updateSelectedStyles();
+
+      slide.dataset.loaded = 'true';
     }
 
     function updateSelectedStyles() {
       for (let i = 0; i < questionsData.length; i++) {
-        const optsDiv = document.getElementById(`options-${i}`);
-        if (!optsDiv) continue;
-        const items = optsDiv.querySelectorAll('.option-item');
+        const slide = document.querySelector(`.question-slide[data-index="${i}"]`);
+        if (!slide) continue;
+        const items = slide.querySelectorAll('.option-item');
         items.forEach((item, idx) => {
           if (answers[i] === idx) item.classList.add('selected');
           else item.classList.remove('selected');
@@ -1119,49 +1130,90 @@
     }
 
     function updateSlidePosition() {
+      // 恢复过渡动画
+      slidesContainer.style.transition = 'transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1)';
       slidesContainer.style.transform = `translateX(-${currentIndex * 100}%)`;
-      for (let i = 0; i < questionsData.length; i++) {
-        const indicator = document.getElementById(`indicator-${i}`);
-        if (indicator) {
-          const dots = indicator.querySelectorAll('.dot');
-          dots.forEach((dot, idx) => dot.classList.toggle('active', idx === currentIndex));
-        }
-      }
-      preloadAdjacentImages(currentIndex);
-    }
-
-    function preloadAdjacentImages(idx) {
-      // 加载当前、前一张、后一张
-      const toPreload = [idx];
-      if (idx > 0) toPreload.push(idx - 1);
-      if (idx < questionsData.length - 1) toPreload.push(idx + 1);
-      
-      document.querySelectorAll('.slide-bg-img').forEach(img => {
-        const imgIdx = parseInt(img.closest('.question-slide').dataset.index);
-        if (toPreload.includes(imgIdx)) {
-          const src = img.dataset.src;
-          if (src && img.src !== src) {
-            img.src = src;
+      // 等待浏览器完成布局和绘制后，再进行 DOM 读取和修改
+      requestAnimationFrame(() => {
+        // 批量获取所有 slide，避免在循环中反复查询 DOM
+        const allSlides = document.querySelectorAll('.question-slide');
+        allSlides.forEach(slide => {
+          const i = parseInt(slide.dataset.index);
+          if (Math.abs(i - currentIndex) <= 1) {
+            if (slide.dataset.loaded !== 'true') {
+              injectSlideContent(i);
+            }
+          } else {
+            if (slide.dataset.loaded === 'true') {
+              slide.innerHTML = '';
+              slide.dataset.loaded = 'false';
+            }
           }
-        } else {
-          img.src = '';
-        }
+        });
+        updateIndicators();
       });
     }
 
-    let touchStartX = 0;
+    function updateIndicators() {
+      // 批量更新指示器状态
+      document.querySelectorAll('.nav-indicator').forEach(indicator => {
+        indicator.querySelectorAll('.dot').forEach((dot, idx) => {
+          dot.classList.toggle('active', idx === currentIndex);
+        });
+      });
+    }
+
+    // 跟手滑动状态
+    let touchStartX = 0, touchCurrentX = 0, isDragging = false, touchStartTime = 0;
+
     function bindSwipe() {
       const viewport = document.getElementById('quizViewport');
-      viewport.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, {passive: true});
-      viewport.addEventListener('touchend', (e) => {
-        if (!touchStartX) return;
-        const diff = e.changedTouches[0].clientX - touchStartX;
-        if (Math.abs(diff) > 40) {
-          if (diff < 0 && currentIndex < 23) currentIndex++;
-          else if (diff > 0 && currentIndex > 0) currentIndex--;
-          updateSlidePosition();
+
+      viewport.addEventListener('touchstart', (e) => {
+        touchStartX = e.touches[0].clientX;
+        touchCurrentX = 0;
+        isDragging = true;
+        touchStartTime = Date.now();
+        // 取消过渡，实现跟手
+        slidesContainer.style.transition = 'none';
+      }, { passive: true });
+
+      viewport.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        touchCurrentX = e.touches[0].clientX - touchStartX;
+        // 计算相对偏移百分比
+        const offsetPercent = (touchCurrentX / viewport.offsetWidth) * 100;
+        const newOffset = -currentIndex * 100 + offsetPercent;
+        slidesContainer.style.transform = `translateX(${newOffset}%)`;
+      }, { passive: true });
+
+      viewport.addEventListener('touchend', () => {
+        if (!isDragging) return;
+        isDragging = false;
+
+        // 根据速度加权判断：快滑即使距离短也切页
+        const duration = Date.now() - touchStartTime;
+        const velocity = Math.abs(touchCurrentX) / duration;
+        const threshold = velocity > 0.3 ? 20 : 40; // 快速滑动降低阈值
+
+        if (touchCurrentX < -threshold && currentIndex < 23) {
+          currentIndex++;
+        } else if (touchCurrentX > threshold && currentIndex > 0) {
+          currentIndex--;
         }
-        touchStartX = 0;
+        updateSlidePosition();
+      });
+    }
+
+    // 事件委托：选项点击
+    function bindOptionEvents() {
+      slidesContainer.addEventListener('click', (e) => {
+        const option = e.target.closest('.option-item');
+        if (!option) return;
+        const slide = option.closest('.question-slide');
+        const qIndex = parseInt(slide.dataset.index);
+        const optIndex = parseInt(option.dataset.optIndex);
+        handleOptionClick(qIndex, optIndex);
       });
     }
 
@@ -1219,6 +1271,7 @@
       resultTextCard = document.getElementById('resultTextCard');
       buildSlides();
       bindSwipe();
+      bindOptionEvents();
       document.getElementById('startBtn').addEventListener('click', () => { homeScreen.classList.add('hidden'); quizScreen.classList.remove('hidden'); restartQuiz(); });
       document.getElementById('restartFromResult').addEventListener('click', () => restartQuiz());
     }
