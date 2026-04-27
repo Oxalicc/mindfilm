@@ -1062,7 +1062,7 @@
         const nextSrc = i === 0 ? `./images/q${i+2}.webp` : '';
         html += `
           <div class="question-slide" data-index="${i}">
-            <img class="slide-bg-img" src="${imgSrc}" data-src="./images/q${i+1}.png" data-prev="${prevSrc}" data-next="${nextSrc}" alt="背景" onerror="this.style.backgroundColor='#8faa87'; this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'%3E%3Crect width=\\'100\\' height=\\'100\\' fill=\\'%23a1b89b\\'/%3E%3C/svg%3E';">
+            <img class="slide-bg-img" src="${imgSrc}" data-src="./images/q${i+1}.webp" data-prev="${prevSrc}" data-next="${nextSrc}" alt="背景" onerror="this.style.backgroundColor='#8faa87'; this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'%3E%3Crect width=\\'100\\' height=\\'100\\' fill=\\'%23a1b89b\\'/%3E%3C/svg%3E';">
             <div class="question-content">
               <div class="progress-header"><span>第${i+1}/24题</span><span>${i<6?'感知':i<12?'判断':i<18?'外倾':'内倾'}</span></div>
               <div class="question-text">${q.text}</div>
