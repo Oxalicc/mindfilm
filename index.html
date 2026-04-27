@@ -1121,10 +1121,13 @@
       if (answers[qIndex] === optIndex) return;
       answers[qIndex] = optIndex;
       updateSelectedStyles();
-      if (qIndex === 23) {
-        if (answers.every(a => a !== null)) showResult();
+      // 无论在哪题完成，检查是否全部作答
+      if (answers.every(a => a !== null)) {
+        showResult();
         return;
       }
+      // 最后一题完成后不跳转
+      if (qIndex === 23) return;
       currentIndex = qIndex + 1;
       updateSlidePosition();
     }
