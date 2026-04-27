@@ -49,7 +49,7 @@
 
     /* 首页 */
     #homeScreen {
-      background: #f5f3f0;
+      background: url('./images/bg.png') center center / cover no-repeat;
       padding: 24px 20px;
       display: flex;
       flex-direction: column;
@@ -58,7 +58,7 @@
     }
 
     .home-card {
-      background: rgba(255, 255, 245, 0.85);
+      background: rgba(255, 255, 245, 0.5);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       border-radius: 36px;
@@ -370,6 +370,7 @@
   <div id="resultScreen" class="screen hidden">
     <div class="result-top-bar">
       <span style="font-weight: 500; color: #3e5a3a;">✨ 你的人生电影</span>
+      <span style="font-size: 0.8rem; color: #7a9a6e;">长按保存</span>
       <span class="restart-link" id="restartFromResult">↻ 重测</span>
     </div>
     <img id="resultLongImg" class="result-long-img" src="" alt="原型长图" />
@@ -728,8 +729,8 @@
     movieDesc: "经典永不过时，人生不用规划，跟着本心走就够了，适合讨厌束缚、喜欢随性活的你。", 
     picks: [
       { title: "《没有过去的男人》", desc: "荒诞又温柔，人生随时能重启，适合爱新鲜感、拒绝被定义的人。" },
-      { title: "《日丽》", desc: "用回忆讲故事，视角独特不枯燥，适合心思跳脱、喜欢不一样叙事的你。" },
-      { title: "《世界上最烂的人》", desc: "讲年轻人的迷茫与摇摆，不立人设，适合接纳不完美、活得真实的人。" }
+      { title: "《宇宙探索编辑部》", desc: "伪纪录片式的荒诞诗篇，跟着一群神经病找外星人，却在雪花点里听见宇宙的余晖。适合心思跳脱、热衷从无意义中打捞浪漫的你。" },
+      { title: "《世界上最糟糕的人》", desc: "讲年轻人的迷茫与摇摆，不立人设，适合接纳不完美、活得真实的人。" }
     ] 
   },
   { 
@@ -1149,7 +1150,7 @@
         resultTextCard.classList.remove('hidden');
         renderTextCard(proto);
       };
-      resultLongImg.src = `./images/result/prototype_${protoIdx+1}.png`;
+      resultLongImg.src = `./images/result/p${protoIdx+1}.jpg`;
       quizScreen.classList.add('hidden');
       resultScreen.classList.remove('hidden');
       homeScreen.classList.add('hidden');
